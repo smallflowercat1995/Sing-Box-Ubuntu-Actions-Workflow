@@ -1,0 +1,62 @@
+name: Sing-Box-Ubuntu-Actions-Workflow
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  # Runs every 5 minutes.
+  # Runs at 00:00 UTC every day.
+  # Actions schedules run at most every 5 minutes.
+  # schedule:
+    # - cron: '*/5 * * * *'
+    # - cron: '0 0 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  sing-box-v:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 9999
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Runs a single command using the runners shell
+      - name: Run download curl
+        run: |
+          curl -SL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H "Connection: keep-alive" -k "https://raw.githubusercontent.com/smallflowercat1995/Sing-Box-Ubuntu-Actions-Workflow/master/set-sing-box.sh" -o set-sing-box.sh -O
+          sudo chmod u+x set-sing-box.sh
+          bash set-sing-box.sh 
+        env:
+          USER_NAME: ${{ secrets.USER_NAME }}
+          USER_PW: ${{ secrets.USER_PW }}
+          HOST_NAME: ${{ secrets.HOST_NAME }}
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+            
+      - name: Send email with attachments
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAILADDR }}
+          server_port: ${{ secrets.MAILPORT }}
+          secure: true
+          username: ${{ secrets.MAILUSERNAME }}
+          password: ${{ secrets.MAILPASSWORD }}
+          subject: 创建 ssh sing-box 信息
+          to: ${{ secrets.MAILSENDTO }}
+          from: GitHub Actions
+          body: run job of ${{ github.repository }} completed successfully!
+          attachments: |
+            result.txt
+            VLESS.png
+            VMESS.png
+            TROJAN.png
+            client-nekobox-config.yaml
+            client-sing-box-config.json
+
+      - name: 6h
+        run: | 
+          sudo rm -rfv /home/runner/work/Sing-Box-Ubuntu-Actions-Workflow
+          sudo journalctl -u sing-box --output cat -f
+          sleep 6h

@@ -1,0 +1,4 @@
+# 禁止对 .gitattributes 文件进行行尾符转换
+.gitattributes -text
+# 在 .gitattributes 文件中设置行尾符为 LF 的文件
+* -text
